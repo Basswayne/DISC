@@ -1,0 +1,406 @@
+import React, { useState, useEffect } from 'react';
+
+// --- 題目資料 ---
+const RAW_QUESTIONS = [
+  {
+    id: 1,
+    text: "當小孩跟你分享想要「嘗試或學習某件新事物」時，你比較常出現的回應方式？",
+    options: [
+      { text: "了解孩子的期待與目標，再提出建議(或反對)", type: "D" },
+      { text: "了解這件事情有不有趣，孩子有興趣的點在哪", type: "I" },
+      { text: "願意傾聽孩子想法，給予支持與陪伴", type: "S" },
+      { text: "確認具體內容與可能風險，並提醒孩子注意細節", type: "C" }
+    ]
+  },
+  {
+    id: 2,
+    text: "平常和孩子相處時，你比較常呈現的互動方式？",
+    options: [
+      { text: "常提醒孩子該做什麼與期待的結果", type: "D" },
+      { text: "透過聊天或玩樂建立關係", type: "I" },
+      { text: "關心他的感受與狀態", type: "S" },
+      { text: "重視規則與原則，會提醒孩子按規矩來", type: "C" }
+    ]
+  },
+  {
+    id: 3,
+    text: "當孩子與你溝通時，你比較希望他怎麼表達？",
+    options: [
+      { text: "直接說重點", type: "D" },
+      { text: "輕鬆自然地分享想法", type: "I" },
+      { text: "慢慢說清楚他的想法與感受", type: "S" },
+      { text: "有條理、有原因地具體說明細節", type: "C" }
+    ]
+  },
+  {
+    id: 4,
+    text: "你覺得自己在教養上的優點比較屬於哪個類型？",
+    options: [
+      { text: "很有行動力，會帶著孩子成長", type: "D" },
+      { text: "很會帶氣氛，孩子跟你相處很開心", type: "I" },
+      { text: "很有耐心，願意陪伴孩子", type: "S" },
+      { text: "很有原則，教養很有條理", type: "C" }
+    ]
+  },
+  {
+    id: 5,
+    text: "你在家庭中的教養角色比較像？",
+    options: [
+      { text: "設定目標、帶領孩子前進的人", type: "D" },
+      { text: "帶來歡樂、促進互動的人", type: "I" },
+      { text: "穩定支持、照顧情緒的人", type: "S" },
+      { text: "建立規範、遵守原則的人", type: "C" }
+    ]
+  },
+  {
+    id: 6,
+    text: "在教養孩子時，什麼情況最容易讓你焦慮？",
+    options: [
+      { text: "孩子不受控或不配合", type: "D" },
+      { text: "親子關係變差", type: "I" },
+      { text: "孩子情緒不穩或壓力大", type: "S" },
+      { text: "沒有明確的教養方法或標準", type: "C" }
+    ]
+  },
+  {
+    id: 7,
+    text: "在陪伴孩子成長的過程中，你最在意的是？",
+    options: [
+      { text: "孩子是否達到目標或進步", type: "D" },
+      { text: "孩子是否感到開心快樂", type: "I" },
+      { text: "孩子的感受是否被理解、被支持", type: "S" },
+      { text: "孩子是否養成良好習慣與規範", type: "C" }
+    ]
+  },
+  {
+    id: 8,
+    text: "你覺得自己在教養上的小缺點可能是？",
+    options: [
+      { text: "有時太急、比較沒有耐性", type: "D" },
+      { text: "有時不夠細心或容易大意", type: "I" },
+      { text: "有時擔心太多、太顧慮孩子感受", type: "S" },
+      { text: "有時太嚴格或過於要求", type: "C" }
+    ]
+  },
+  {
+    id: 9,
+    text: "當面對影響孩子未來的決定（例如：是否補習、是否學才藝）時，你通常會？",
+    options: [
+      { text: "依照經驗與判斷，快速做出對孩子最有利的決定", type: "D" },
+      { text: "會先說服孩子願意嘗試，再根據後續情況看看適不適合", type: "I" },
+      { text: "會考慮孩子的感受與接受度，並與家人朋友討論", type: "S" },
+      { text: "蒐集資訊（課程、老師、評價）後再審慎決定", type: "C" }
+    ]
+  },
+  {
+    id: 10,
+    text: "當孩子因為和同學吵架或被誤會，回家情緒低落甚至生氣時，你通常會？",
+    options: [
+      { text: "直接介入，教孩子應該怎麼處理或解決問題", type: "D" },
+      { text: "帶孩子抒發情緒，或是分享自己(或他人)的經驗，讓孩子感受好一點", type: "I" },
+      { text: "先安撫孩子情緒，陪伴他把感受說出來", type: "S" },
+      { text: "和孩子一起分析事情經過，釐清原因並想出應對方法", type: "C" }
+    ]
+  },
+  {
+    id: 11,
+    text: "當孩子面對挑戰（如考試或比賽）時，你的第一反應是？",
+    options: [
+      { text: "鼓勵他勇敢面對並想辦法突破", type: "D" },
+      { text: "用鼓勵或輕鬆方式幫他減壓", type: "I" },
+      { text: "陪伴他一起討論與準備", type: "S" },
+      { text: "協助他規劃步驟與準備細節", type: "C" }
+    ]
+  },
+  {
+    id: 12,
+    text: "你最希望在孩子面前能呈現出哪一面？",
+    options: [
+      { text: "果斷、可以依靠", type: "D" },
+      { text: "親切、歡樂、有趣", type: "I" },
+      { text: "溫暖、包容、有同理心", type: "S" },
+      { text: "細心、做事有原則", type: "C" }
+    ]
+  },
+  {
+    id: 13,
+    text: "在教養過程中，你最不喜歡什麼狀況？",
+    options: [
+      { text: "孩子拖延、不願行動", type: "D" },
+      { text: "親子互動冷淡、缺乏交流", type: "I" },
+      { text: "孩子情緒不穩、缺乏安全感", type: "S" },
+      { text: "孩子不願意遵守規則", type: "C" }
+    ]
+  },
+  {
+    id: 14,
+    text: "當孩子聽不懂你的指示或要求時，你會？",
+    options: [
+      { text: "直接指揮他要怎麼做", type: "D" },
+      { text: "試著換比較輕鬆、好懂的方式多說明一兩次看看", type: "I" },
+      { text: "帶著孩子做一次或是做給他看", type: "S" },
+      { text: "一步一步說明清楚細節或標準", type: "C" }
+    ]
+  },
+  {
+    id: 15,
+    text: "你會如何形容自己的教養風格？",
+    options: [
+      { text: "明確要求孩子表現，並帶著他達成目標", type: "D" },
+      { text: "用輕鬆互動的方式陪伴孩子成長", type: "I" },
+      { text: "耐心陪伴孩子，重視他的感受與情緒", type: "S" },
+      { text: "訂立清楚規範，並引導孩子把事情做好", type: "C" }
+    ]
+  }
+];
+
+// --- 測驗結果資料 ---
+const RESULT_DATA = {
+  D: {
+    title: "目標導向型教養 (老虎型)",
+    strengths: "果斷、有行動力，能有效帶領孩子達成目標，給予明確的方向，保護孩子不迷失。",
+    warnings: "有時可能會顯得過度嚴厲或急躁。請多留意孩子的感受與情緒，適時給予彈性空間，允許孩子以自己的步調探索。"
+  },
+  I: {
+    title: "歡樂互動型教養 (孔雀型)",
+    strengths: "擅長帶動氣氛，與孩子關係緊密如朋友，能鼓勵孩子發揮創意與勇敢表達自我。",
+    warnings: "有時可能因為過於隨興而忽略了細節或規則。需適時建立穩定的規範讓孩子依循，培養其紀律感。"
+  },
+  S: {
+    title: "溫暖陪伴型教養 (無尾熊型)",
+    strengths: "極具耐心與同理心，能提供高度的安全感，善於傾聽，是孩子最強大、最穩定的情緒後盾。",
+    warnings: "避免過度保護或因為心軟而過於妥協。有時需要堅定立場，設立界線，並放手讓孩子獨立面對生活中的挑戰。"
+  },
+  C: {
+    title: "原則規範型教養 (貓頭鷹型)",
+    strengths: "重視邏輯與條理，做事細心，能幫助孩子建立良好的生活習慣、責任感與規矩。",
+    warnings: "避免標準過高或顯得吹毛求疵。學習容許孩子犯錯，並在日常中多給予口頭上的讚美與肯定，而非只關注需要改進的地方。"
+  }
+};
+
+export default function App() {
+  const [view, setView] = useState('home'); // 'home', 'quiz', 'result'
+  const [nickname, setNickname] = useState('');
+  const [currentQ, setCurrentQ] = useState(0);
+  const [scores, setScores] = useState({ D: 0, I: 0, S: 0, C: 0 });
+  const [quizQuestions, setQuizQuestions] = useState([]);
+  const [resultType, setResultType] = useState(null);
+
+  // 初始化與打亂選項
+  useEffect(() => {
+    const shuffleArray = (array) => [...array].sort(() => Math.random() - 0.5);
+    const preparedQuestions = RAW_QUESTIONS.map(q => ({
+      ...q,
+      options: shuffleArray(q.options)
+    }));
+    setQuizQuestions(preparedQuestions);
+  }, [view]); // 當重新開始回到首頁時重新洗牌
+
+  const handleStart = () => {
+    if (!nickname.trim()) {
+      alert("請先填寫暱稱唷！");
+      return;
+    }
+    setScores({ D: 0, I: 0, S: 0, C: 0 });
+    setCurrentQ(0);
+    setView('quiz');
+  };
+
+  const handleOptionClick = (type) => {
+    const newScores = { ...scores, [type]: scores[type] + 1 };
+    setScores(newScores);
+
+    if (currentQ < quizQuestions.length - 1) {
+      // 稍微延遲讓使用者看到點擊效果
+      setTimeout(() => {
+        setCurrentQ(currentQ + 1);
+      }, 150);
+    } else {
+      calculateResult(newScores);
+    }
+  };
+
+  const calculateResult = async (finalScores) => {
+    // 找出最高分
+    let maxType = 'D';
+    let maxScore = finalScores.D;
+    
+    ['I', 'S', 'C'].forEach(type => {
+      if (finalScores[type] > maxScore) {
+        maxScore = finalScores[type];
+        maxType = type;
+      }
+    });
+
+    setResultType(maxType);
+    setView('result');
+    await submitDataToSheet(nickname, RESULT_DATA[maxType].title);
+  };
+
+  const submitDataToSheet = async (name, resultTitle) => {
+    // 套用您提供的 GAS Web App 網址
+    const GOOGLE_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzTp8_515ZzsZH6osMyV5DuG18x3gmx5Y8Pbt7cLtjTQnaFcKloYEGHXyhpylTSS6LB/exec"; 
+    
+    const timestamp = new Date().toLocaleString('zh-TW');
+    const payload = { nickname: name, result: resultTitle, timestamp };
+    
+    console.log(`[準備送出資料] 暱稱: ${name}, 結果: ${resultTitle}, 時間: ${timestamp}`);
+    
+    try {
+      // 發送請求時加入 mode: 'no-cors'，可繞過瀏覽器的 CORS 阻擋
+      await fetch(GOOGLE_SCRIPT_WEBAPP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 
+          'Content-Type': 'text/plain;charset=utf-8' 
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      // 在 no-cors 模式下，response.json() 會發生錯誤（因為 response 變成 opaque 不透明的）
+      // 只要 fetch 沒有拋出錯誤，通常就代表請求已經成功發送了！
+      console.log("資料發送成功！請檢查您的 Google Sheet。");
+      
+    } catch (error) {
+      console.error("資料傳送失敗", error);
+    }
+  };
+
+  return (
+    <div className="font-sans min-h-screen bg-slate-50 text-slate-800 flex justify-center selection:bg-blue-100">
+      <style dangerouslySetInnerHTML={{__html: `
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        .font-sans { font-family: 'Noto Sans TC', 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+      `}} />
+
+      {/* 手機版面容器，限制最大寬度 */}
+      <div className="w-full max-w-md bg-white shadow-lg overflow-hidden flex flex-col relative">
+        
+        {/* ================= 首頁 ================= */}
+        {view === 'home' && (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 shadow-sm">
+              <svg className="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+            </div>
+            
+            <h1 className="text-2xl font-bold mb-4 text-slate-700">你是哪一種教養風格？</h1>
+            
+            <p className="text-slate-500 text-sm mb-10 leading-relaxed max-w-[280px]">
+              「請以與孩子相處時的情境，依自己實際的行事風格作答，選擇最符合自己的選項，共 15 題」
+            </p>
+
+            <div className="w-full mb-8">
+              <label htmlFor="nickname" className="block text-left text-sm font-medium text-slate-600 mb-2 pl-1">
+                請輸入您的暱稱
+              </label>
+              <input 
+                id="nickname"
+                type="text" 
+                maxLength={10}
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="暱稱 (最多10字)" 
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+              />
+            </div>
+
+            <button 
+              onClick={handleStart}
+              className="w-full py-4 rounded-xl text-white font-medium text-lg bg-gradient-to-r from-blue-400 to-blue-500 shadow-md active:scale-[0.98] transition-transform"
+            >
+              開始測驗
+            </button>
+          </div>
+        )}
+
+        {/* ================= 測驗頁 ================= */}
+        {view === 'quiz' && quizQuestions.length > 0 && (
+          <div className="flex-1 flex flex-col p-6 overflow-y-auto">
+            
+            {/* 進度條 */}
+            <div className="mb-6">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-xs font-medium text-slate-400">目前進度</span>
+                <span className="text-sm font-bold text-blue-500">{currentQ + 1} / {quizQuestions.length}</span>
+              </div>
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-400 transition-all duration-300 ease-out"
+                  style={{ width: `${((currentQ + 1) / quizQuestions.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* 題目 */}
+            <h2 className="text-[17px] font-medium leading-relaxed text-slate-700 mb-8 min-h-[80px]">
+              {currentQ + 1}. {quizQuestions[currentQ].text}
+            </h2>
+
+            {/* 選項區塊 */}
+            <div className="flex flex-col gap-3 pb-8">
+              {quizQuestions[currentQ].options.map((option, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleOptionClick(option.type)}
+                  className="w-full p-5 text-left bg-white border border-slate-200 rounded-2xl shadow-sm text-[15px] leading-relaxed text-slate-600 hover:border-blue-300 active:bg-blue-50 active:border-blue-400 transition-all"
+                >
+                  {option.text}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ================= 結果頁 ================= */}
+        {view === 'result' && resultType && (
+          <div className="flex-1 flex flex-col p-6 overflow-y-auto bg-slate-50">
+            <div className="text-center mt-6 mb-8">
+              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-bold mb-3">
+                測驗結果
+              </span>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                {nickname}，您的專屬風格是
+              </h2>
+              <h1 className="text-3xl font-bold text-blue-500 mt-2">
+                {RESULT_DATA[resultType].title}
+              </h1>
+            </div>
+
+            {/* 優點區塊 */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h3 className="font-bold text-lg text-slate-700">教養優點</h3>
+              </div>
+              <p className="text-slate-600 leading-relaxed text-[15px]">
+                {RESULT_DATA[resultType].strengths}
+              </p>
+            </div>
+
+            {/* 注意事項區塊 */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+                <h3 className="font-bold text-lg text-slate-700">要注意什麼</h3>
+              </div>
+              <p className="text-slate-600 leading-relaxed text-[15px]">
+                {RESULT_DATA[resultType].warnings}
+              </p>
+            </div>
+
+            <button 
+              onClick={() => setView('home')}
+              className="w-full mt-auto mb-6 py-4 rounded-xl text-blue-500 font-medium text-lg bg-blue-50 border border-blue-200 active:bg-blue-100 transition-colors"
+            >
+              再測一次
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
