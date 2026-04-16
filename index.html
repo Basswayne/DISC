@@ -1,441 +1,424 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>你是哪一種教養風格？</title>
-  
-  <!-- 載入 Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- 載入 Google 字體 Noto Sans TC -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-  
-  <!-- 載入 React 與 ReactDOM -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  
-  <!-- 載入 Babel 以便在瀏覽器中解析 JSX -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>親子版 DISC 教養風格評測</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- 引入 html2canvas 用於生成圖片下載 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #FDFCFB;
+            --primary-blue: #A9D1E1;
+            --soft-gray: #E9ECEF;
+            --text-dark: #343A40;
+            --text-muted: #6C757D;
+            --falcon: #E63946;
+            --dolphin: #00A8E8;
+            --elephant: #2A9D8F;
+            --owl: #4A6D7C;
+            --resource-bg: #F0F4F8;
+        }
 
-  <style>
-    body {
-      font-family: 'Noto Sans TC', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    }
-  </style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0; padding: 0;
+            display: flex; justify-content: center;
+            min-height: 100vh;
+        }
+
+        #app-container {
+            width: 100%; max-width: 500px;
+            padding: 24px;
+            display: flex; flex-direction: column;
+        }
+
+        .screen { display: none; width: 100%; }
+        .active { display: block; animation: fadeIn 0.4s ease-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 說明頁 */
+        .intro-content { text-align: center; padding-top: 40px; }
+        .intro-image { 
+            width: 98%; 
+            max-width: 700px; 
+            height: auto; 
+            border-radius: 20px; 
+            margin: 0 auto 30px; 
+            display: block;
+        }
+        .intro-text { font-size: 18px; line-height: 1.8; color: #4A6D7C; font-weight: 500; margin-bottom: 40px; padding: 0 10px; }
+
+        /* 資料填寫頁面 */
+        .home-content { text-align: center; padding-top: 40px; }
+        .home-title { font-size: 26px; font-weight: 700; color: #4A6D7C; margin-bottom: 12px; }
+        .home-desc { font-size: 15px; color: var(--text-muted); line-height: 1.8; margin-bottom: 30px; }
+        
+        .input-label { display: block; text-align: left; margin-bottom: 10px; font-weight: 700; color: #4A6D7C; font-size: 16px; }
+        
+        input[type="text"], select {
+            width: 100%; padding: 18px;
+            border: 2px solid var(--soft-gray);
+            border-radius: 16px;
+            font-size: 16px; text-align: center;
+            outline: none; background: white;
+            margin-bottom: 24px;
+            appearance: none; 
+            -webkit-appearance: none;
+        }
+        
+        select { text-align-last: center; cursor: pointer; }
+
+        .btn-main {
+            width: 100%; padding: 18px;
+            background: linear-gradient(135deg, #A9D1E1 0%, #8EBCCF 100%);
+            color: white; border: none;
+            border-radius: 50px; font-size: 18px; font-weight: 700;
+            box-shadow: 0 6px 20px rgba(169, 209, 225, 0.4);
+            cursor: pointer;
+        }
+
+        /* 測驗頁 */
+        .progress-wrapper { margin-bottom: 30px; }
+        .progress-info { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: var(--text-muted); }
+        .progress-bar-bg { height: 8px; background: #F1F3F5; border-radius: 10px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--primary-blue); width: 0%; transition: width 0.3s; }
+        .question-text { font-size: 19px; font-weight: 700; line-height: 1.6; color: #2D4059; margin-bottom: 30px; min-height: 80px; }
+        .option-item { background: white; border: 1px solid #EBEEF0; border-radius: 16px; padding: 20px; margin-bottom: 12px; font-size: 16px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .option-item:active { background-color: #F8F9FA; border-color: var(--primary-blue); }
+
+        /* 結果頁內容 */
+        .result-container { background: white; border-radius: 24px; padding: 24px 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        #capture-area { background: #FFFFFF; padding: 20px; border-radius: 20px; }
+        .unit-name { text-align: center; font-size: 14px; color: var(--primary-blue); font-weight: 700; letter-spacing: 1px; margin-bottom: 20px; }
+        .animal-icon { font-size: 64px; text-align: center; margin-bottom: 15px; }
+        .res-primary-title { font-size: 26px; font-weight: 700; text-align: center; color: #4A6D7C; margin-bottom: 8px; }
+        .res-primary-subtitle { font-size: 15px; text-align: center; color: var(--text-muted); margin-bottom: 32px; }
+        .score-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 32px; }
+        .score-card { background: white; padding: 16px; border-radius: 16px; text-align: center; border: 1px solid #F1F3F5; }
+        .score-card.active { border: 2px solid var(--primary-blue); background: #F0F7FA; }
+        .score-label { font-size: 13px; color: var(--text-muted); display: block; margin-bottom: 4px; }
+        .score-val { font-size: 22px; font-weight: 700; color: #4A6D7C; }
+
+        .analysis-block { margin-top: 20px; }
+        .type-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .type-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .type-name { font-size: 18px; font-weight: 700; color: #2D4059; }
+
+        .dimension-item { margin-bottom: 24px; }
+        .dimension-header { font-weight: 700; font-size: 16px; color: #5A7D8C; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .dimension-body { font-size: 15px; line-height: 1.8; color: #495057; white-space: pre-line; padding-left: 2px; }
+        .dimension-body span { display: block; position: relative; padding-left: 15px; margin-bottom: 4px; }
+        .dimension-body span::before { content: "•"; position: absolute; left: 0; color: #ADB5BD; }
+
+        .highlight-box {
+            background: #FDFCFB; border-left: 4px solid var(--primary-blue);
+            padding: 16px; margin-top: 24px; font-size: 15px;
+            line-height: 1.6; color: #5A7D8C; border-radius: 0 12px 12px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .footer-image-wrap { text-align: center; margin-top: 30px; }
+        .footer-image { width: 200px; height: auto; border-radius: 8px; }
+
+        /* 操作區 */
+        .download-action-area { text-align: center; margin: 25px 0; }
+        .btn-download {
+            background: white; color: var(--primary-blue); border: 2px solid var(--primary-blue);
+            width: 200px; padding: 12px 0; border-radius: 30px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn-download:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* 手風琴與資源 */
+        .accordion-item { border: 1px solid #F1F3F5; border-radius: 16px; margin-bottom: 12px; overflow: hidden; }
+        .accordion-trigger { width: 100%; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; background: white; border: none; cursor: pointer; }
+        .accordion-label { font-size: 16px; font-weight: 700; color: #4A6D7C; }
+        .accordion-arrow { font-size: 14px; color: #ADB5BD; transition: transform 0.3s; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; background: white; padding: 0 20px; }
+        .accordion-item.open .accordion-content { max-height: 1500px; padding: 10px 20px 20px; }
+        .accordion-item.open .accordion-arrow { transform: rotate(180deg); }
+
+        .resource-section { margin-top: 10px; padding: 20px; background-color: var(--resource-bg); border-radius: 20px; }
+        .resource-title { font-size: 18px; font-weight: 700; color: #2D4059; margin-bottom: 15px; text-align: center; }
+        .resource-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; border: 1px solid #E1E8EE; }
+        .resource-name { font-weight: 700; font-size: 15px; margin-bottom: 2px; color: #4A6D7C; }
+        .resource-tag { font-size: 12px; color: var(--text-muted); }
+
+        .section-divider { text-align: center; margin: 40px 0 20px; position: relative; }
+        .section-divider::before { content: ""; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: #EEE; }
+        .section-divider span { position: relative; z-index: 2; background: var(--bg-color); padding: 0 16px; color: #ADB5BD; font-size: 14px; }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 selection:bg-blue-100">
-  
-  <!-- React 應用程式掛載點 -->
-  <div id="root"></div>
+<body>
 
-  <!-- React 元件與邏輯 -->
-  <script type="text/babel">
-    const { useState, useEffect } = React;
+<div id="app-container">
+    <!-- 說明頁面 -->
+    <div id="screen-intro" class="screen active">
+        <div class="intro-content">
+            <img src="https://lh3.googleusercontent.com/u/0/d/1T864XqbCETozM8ktRe4VnP4oivDhtMNn" alt="測驗說明圖" class="intro-image">
+            <p class="intro-text">
+                教養沒有標準答案，只有不同風格，這份測驗以DISC為靈感，測測看認識自己的親職風格。
+            </p>
+            <button class="btn-main" onclick="goHome()">確定</button>
+        </div>
+    </div>
 
-    // --- 題目資料 ---
-    const RAW_QUESTIONS = [
-      {
-        id: 1,
-        text: "當小孩跟你分享想要「嘗試或學習某件新事物」時，你比較常出現的回應方式？",
-        options: [
-          { text: "了解孩子的期待與目標，再提出建議(或反對)", type: "D" },
-          { text: "了解這件事情有不有趣，孩子有興趣的點在哪", type: "I" },
-          { text: "願意傾聽孩子想法，給予支持與陪伴", type: "S" },
-          { text: "確認具體內容與可能風險，並提醒孩子注意細節", type: "C" }
-        ]
-      },
-      {
-        id: 2,
-        text: "平常和孩子相處時，你比較常呈現的互動方式？",
-        options: [
-          { text: "常提醒孩子該做什麼與期待的結果", type: "D" },
-          { text: "透過聊天或玩樂建立關係", type: "I" },
-          { text: "關心他的感受與狀態", type: "S" },
-          { text: "重視規則與原則，會提醒孩子按規矩來", type: "C" }
-        ]
-      },
-      {
-        id: 3,
-        text: "當孩子與你溝通時，你比較希望他怎麼表達？",
-        options: [
-          { text: "直接說重點", type: "D" },
-          { text: "輕鬆自然地分享想法", type: "I" },
-          { text: "慢慢說清楚他的想法與感受", type: "S" },
-          { text: "有條理、有原因地具體說明細節", type: "C" }
-        ]
-      },
-      {
-        id: 4,
-        text: "你覺得自己在教養上的優點比較屬於哪個類型？",
-        options: [
-          { text: "很有行動力，會帶著孩子成長", type: "D" },
-          { text: "很會帶氣氛，孩子跟你相處很開心", type: "I" },
-          { text: "很有耐心，願意陪伴孩子", type: "S" },
-          { text: "很有原則，教養很有條理", type: "C" }
-        ]
-      },
-      {
-        id: 5,
-        text: "你在家庭中的教養角色比較像？",
-        options: [
-          { text: "設定目標、帶領孩子前進的人", type: "D" },
-          { text: "帶來歡樂、促進互動的人", type: "I" },
-          { text: "穩定支持、照顧情緒的人", type: "S" },
-          { text: "建立規範、遵守原則的人", type: "C" }
-        ]
-      },
-      {
-        id: 6,
-        text: "在教養孩子時，什麼情況最容易讓你焦慮？",
-        options: [
-          { text: "孩子不受控或不配合", type: "D" },
-          { text: "親子關係變差", type: "I" },
-          { text: "孩子情緒不穩或壓力大", type: "S" },
-          { text: "沒有明確的教養方法或標準", type: "C" }
-        ]
-      },
-      {
-        id: 7,
-        text: "在陪伴孩子成長的過程中，你最在意的是？",
-        options: [
-          { text: "孩子是否達到目標或進步", type: "D" },
-          { text: "孩子是否感到開心快樂", type: "I" },
-          { text: "孩子的感受是否被理解、被支持", type: "S" },
-          { text: "孩子是否養成良好習慣與規範", type: "C" }
-        ]
-      },
-      {
-        id: 8,
-        text: "你覺得自己在教養上的小缺點可能是？",
-        options: [
-          { text: "有時太急、比較沒有耐性", type: "D" },
-          { text: "有時不夠細心或容易大意", type: "I" },
-          { text: "有時擔心太多、太顧慮孩子感受", type: "S" },
-          { text: "有時太嚴格或過於要求", type: "C" }
-        ]
-      },
-      {
-        id: 9,
-        text: "當面對影響孩子未來的決定（例如：是否補習、是否學才藝）時，你通常會？",
-        options: [
-          { text: "依照經驗與判斷，快速做出對孩子最有利的決定", type: "D" },
-          { text: "會先說服孩子願意嘗試，再根據後續情況看看適不適合", type: "I" },
-          { text: "會考慮孩子的感受與接受度，並與家人朋友討論", type: "S" },
-          { text: "蒐集資訊（課程、老師、評價）後再審慎決定", type: "C" }
-        ]
-      },
-      {
-        id: 10,
-        text: "當孩子因為和同學吵架或被誤會，回家情緒低落甚至生氣時，你通常會？",
-        options: [
-          { text: "直接介入，教孩子應該怎麼處理或解決問題", type: "D" },
-          { text: "帶孩子抒發情緒，或是分享自己(或他人)的經驗，讓孩子感受好一點", type: "I" },
-          { text: "先安撫孩子情緒，陪伴他把感受說出來", type: "S" },
-          { text: "和孩子一起分析事情經過，釐清原因並想出應對方法", type: "C" }
-        ]
-      },
-      {
-        id: 11,
-        text: "當孩子面對挑戰（如考試或比賽）時，你的第一反應是？",
-        options: [
-          { text: "鼓勵他勇敢面對並想辦法突破", type: "D" },
-          { text: "用鼓勵或輕鬆方式幫他減壓", type: "I" },
-          { text: "陪伴他一起討論與準備", type: "S" },
-          { text: "協助他規劃步驟與準備細節", type: "C" }
-        ]
-      },
-      {
-        id: 12,
-        text: "你最希望在孩子面前能呈現出哪一面？",
-        options: [
-          { text: "果斷、可以依靠", type: "D" },
-          { text: "親切、歡樂、有趣", type: "I" },
-          { text: "溫暖、包容、有同理心", type: "S" },
-          { text: "細心、做事有原則", type: "C" }
-        ]
-      },
-      {
-        id: 13,
-        text: "在教養過程中，你最不喜歡什麼狀況？",
-        options: [
-          { text: "孩子拖延、不願行動", type: "D" },
-          { text: "親子互動冷淡、缺乏交流", type: "I" },
-          { text: "孩子情緒不穩、缺乏安全感", type: "S" },
-          { text: "孩子不願意遵守規則", type: "C" }
-        ]
-      },
-      {
-        id: 14,
-        text: "當孩子聽不懂你的指示或要求時，你會？",
-        options: [
-          { text: "直接指揮他要怎麼做", type: "D" },
-          { text: "試著換比較輕鬆、好懂的方式多說明一兩次看看", type: "I" },
-          { text: "帶著孩子做一次或是做給他看", type: "S" },
-          { text: "一步一步說明清楚細節或標準", type: "C" }
-        ]
-      },
-      {
-        id: 15,
-        text: "你會如何形容自己的教養風格？",
-        options: [
-          { text: "明確要求孩子表現，並帶著他達成目標", type: "D" },
-          { text: "用輕鬆互動的方式陪伴孩子成長", type: "I" },
-          { text: "耐心陪伴孩子，重視他的感受與情緒", type: "S" },
-          { text: "訂立清楚規範，並引導孩子把事情做好", type: "C" }
-        ]
-      }
+    <!-- 資料填寫頁面 -->
+    <div id="screen-home" class="screen">
+        <div class="home-content">
+            <h1 class="home-title">您的個人資料</h1>
+            <p class="home-desc">請填寫基本資料，讓我們為您生成專屬的測驗報告。</p>
+            
+            <div style="text-align: left; max-width: 400px; margin: 0 auto;">
+                <label class="input-label" for="nickname">您的稱呼</label>
+                <input type="text" id="nickname" placeholder="請輸入您的暱稱" maxlength="10">
+                
+                <label class="input-label" for="child-age">您的孩子年齡層是?    如果有多位孩子可分次測驗</label>
+                <select id="child-age">
+                    <option value="" disabled selected>請選擇年齡層</option>
+                    <option value="0-3歲">0-3 歲</option>
+                    <option value="4-6歲">4-6 歲</option>
+                    <option value="7-12歲">7-12 歲</option>
+                    <option value="13-18歲">13-18 歲</option>
+                    <option value="18歲以上">18 歲以上</option>
+                </select>
+            </div>
+            
+            <button class="btn-main" onclick="startQuiz()">開始測驗</button>
+        </div>
+    </div>
+
+    <!-- 測驗頁 -->
+    <div id="screen-quiz" class="screen">
+        <div class="progress-wrapper">
+            <div class="progress-info">
+                <span>測驗進度</span>
+                <span><span id="progress-text">1</span> / 12</span>
+            </div>
+            <div class="progress-bar-bg"><div id="progress-fill" class="progress-bar-fill"></div></div>
+        </div>
+        <div class="question-text" id="question-label"></div>
+        <div id="options-box"></div>
+    </div>
+
+    <!-- 結果頁 -->
+    <div id="screen-result" class="screen">
+        <div class="result-container">
+            <!-- 僅下載此區塊 -->
+            <div id="capture-area">
+                <div class="unit-name">臺北市北投婦女支持培力中心</div>
+                <div class="animal-icon" id="res-icon"></div>
+                <h2 class="res-primary-title" id="res-title"></h2>
+                <p class="res-primary-subtitle" id="res-subtitle"></p>
+                <div class="score-grid" id="score-grid"></div>
+                <div id="main-analysis"></div>
+                <div class="footer-image-wrap">
+                    <img id="result-footer-img" class="footer-image" crossOrigin="anonymous" src="" alt="親子教養資源圖片">
+                </div>
+            </div>
+
+            <div class="download-action-area">
+                <button type="button" class="btn-download" onclick="downloadResult(event)">
+                    <span>📥</span> 直接下載結果 (PNG)
+                </button>
+            </div>
+
+            <div class="resource-section" id="resource-area">
+                <div class="resource-title">📚 教養充電站：推薦學習資源</div>
+                <div id="resource-list"></div>
+            </div>
+
+            <div class="section-divider"><span>了解其他類型</span></div>
+            <div id="others-analysis"></div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <button class="btn-main" onclick="location.reload()" style="background: #F1F3F5; color: #495057; box-shadow: none;">重新測驗</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 已更新為使用者提供的 GAS 網頁應用程式最新 URL
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbxjQu6VzYwHEMcnCop__OVVY1eUCi-jBGRR7JMnFHRKSBIwGENoBd3BbmmNnXjMqN6ljQ/exec"; 
+    
+    const footerImageUrl = "https://lh3.googleusercontent.com/u/0/d/1MC6ih5H3vTVDmbRfQmJP2e9ZkGJQn2CT";
+
+    // 完整的題庫池
+    const questionPool = [
+        { q: "當孩子跟你分享他想「嘗試或學習一件新事物」時，你比較常出現哪一種回應方式？", options: [{t:"先了解他的目標，再給出明確建議。",v:"D"}, {t:"先了解這件事哪裡吸引他、他為什麼有興趣。",v:"I"}, {t:"先傾聽他的想法，給予支持與陪伴。",v:"S"}, {t:"先確認內容是否可行，並提醒他注意細節。",v:"C"}] },
+        { q: "在日常生活中和孩子相處時（如提醒作息、完成事情），你比較常出現哪一種互動方式？", options: [{t:"直接提醒該做什麼，並告訴他我期待的結果。",v:"D"}, {t:"用聊天或輕鬆互動的方式，讓孩子更願意配合。",v:"I"}, {t:"先關心感受，再陪伴他面對接下來的事情。",v:"S"}, {t:"提醒按照規則和順序來，並注意細節。",v:"C"}] },
+        { q: "當孩子與你溝通分享想法時，你比較希望他怎麼表達？", options: [{t:"直接說重點，讓我很快聽懂。",v:"D"}, {t:"輕鬆自然地分享想法，願意自在開口。",v:"I"}, {t:"慢慢說出他的想法與感受。",v:"S"}, {t:"有條理地說明原因與細節。",v:"C"}] },
+        { q: "處理生活教養或面對孩子問題時，你覺得自己最明顯的教養優點？", options: [{t:"很有行動力，會主動帶著孩子一起面對問題。",v:"D"}, {t:"很會帶動氣氛，讓孩子感到輕鬆開心。",v:"I"}, {t:"很有耐心，願意傾聽和陪伴孩子成長。",v:"S"}, {t:"很有原則，重視規範和一致性。",v:"C"}] },
+        { q: "在家庭中的教養分工中，你覺得自己比較像哪一種角色？", options: [{t:"設定方向和目標，帶著孩子往前走。",v:"D"}, {t:"帶來歡樂和互動，讓親子相處更輕鬆。",v:"I"}, {t:"穩定陪伴孩子，照顧他的情緒。",v:"S"}, {t:"建立規範和原則，幫助孩子養成習慣。",v:"C"}] },
+        { q: "在教養孩子的過程中，遇到哪種情況你最容易感到焦慮？", options: [{t:"孩子不配合、難溝通，事情不如預期。",v:"D"}, {t:"親子互動變少，關係沒有以前親近。",v:"I"}, {t:"孩子情緒不穩、壓力大，卻不願意說。",v:"S"}, {t:"不知道該怎麼教，怕自己做錯。",v:"C"}] },
+        { q: "在陪伴孩子成長的過程中，你心裡最在意的通常是？", options: [{t:"孩子是否持續進步，並朝目標前進。",v:"D"}, {t:"孩子是否開心快樂，能自在做自己。",v:"I"}, {t:"孩子的感受是否被理解、被支持。",v:"S"}, {t:"孩子是否養成良好習慣和規範。",v:"C"}] },
+        { q: "在教養過程中，你覺得自己有時比較需要留意的地方？", options: [{t:"我有時太急，會希望孩子快點改變。",v:"D"}, {t:"太重視氣氛，容易忽略細節。",v:"I"}, {t:"太擔心孩子，反而不容易放手。",v:"S"}, {t:"太堅持規則，讓孩子感到壓力。",v:"C"}] },
+        { q: "面對影響未來的重要決定時，你通常比較接近哪種做法？", options: [{t:"依照自己的經驗與判斷做決定。",v:"D"}, {t:"先鼓勵孩子嘗試，再看適不適合。",v:"I"}, {t:"先考慮孩子感受，並和家人討論。",v:"S"}, {t:"先查資料蒐集資訊，再審慎決定。",v:"C"}] },
+        { q: "當孩子因為和同學吵架情緒低落時，你通常會？", options: [{t:"直接介入教孩子該怎麼處理或解決問題。",v:"D"}, {t:"帶孩子抒發情緒或分享經驗，讓他感受好點。",v:"I"}, {t:"先安撫孩子情緒，陪伴他把感受說出來。",v:"S"}, {t:"和孩子一起分析經過，釐清原因想方法。",v:"C"}] },
+        { q: "當孩子面對挑戰（如考試或比賽）時，你的第一反應？", options: [{t:"鼓勵他撐住、想辦法突破。",v:"D"}, {t:"先幫他放鬆，別太有壓力。",v:"I"}, {t:"陪他一起討論、一起準備。",v:"S"}, {t:"協助他安排步驟，把細節準備好。",v:"C"}] },
+        { q: "在孩子面前，你最希望呈現出哪一種樣子？", options: [{t:"果斷可靠，讓孩子可以依靠。",v:"D"}, {t:"親切歡樂，讓孩子相處輕鬆。",v:"I"}, {t:"溫暖包容，能理解孩子感受。",v:"S"}, {t:"細心有原則，做事穩定又周全。",v:"C"}] },
+        { q: "教養過程中，哪種情況最容易讓你感到困擾？", options: [{t:"孩子拖拖拉拉，不願意行動。",v:"D"}, {t:"親子互動變少，沒什麼交流。",v:"I"}, {t:"孩子情緒不穩，常常沒有安全感。",v:"S"}, {t:"孩子不願意遵守規則或約定。",v:"C"}] },
+        { q: "當孩子聽不懂你的要求時，你通常會？", options: [{t:"直接指示他接下來該怎麼做。",v:"D"}, {t:"換個輕鬆好懂的方式再解釋。",v:"I"}, {t:"陪著他做一次，或示範給他看。",v:"S"}, {t:"按步驟把細節和標準講清楚。",v:"C"}] }
     ];
 
-    // --- 測驗結果資料 ---
-    const RESULT_DATA = {
-      D: {
-        title: "目標導向型教養 (老虎型)",
-        strengths: "果斷、有行動力，能有效帶領孩子達成目標，給予明確的方向，保護孩子不迷失。",
-        warnings: "有時可能會顯得過度嚴厲或急躁。請多留意孩子的感受與情緒，適時給予彈性空間，允許孩子以自己的步調探索。"
-      },
-      I: {
-        title: "歡樂互動型教養 (孔雀型)",
-        strengths: "擅長帶動氣氛，與孩子關係緊密如朋友，能鼓勵孩子發揮創意與勇敢表達自我。",
-        warnings: "有時可能因為過於隨興而忽略了細節或規則。需適時建立穩定的規範讓孩子依循，培養其紀律感。"
-      },
-      S: {
-        title: "溫暖陪伴型教養 (無尾熊型)",
-        strengths: "極具耐心與同理心，能提供高度的安全感，善於傾聽，是孩子最強大、最穩定的情緒後盾。",
-        warnings: "避免過度保護或因為心軟而過於妥協。有時需要堅定立場，設立界線，並放手讓孩子獨立面對生活中的挑戰。"
-      },
-      C: {
-        title: "原則規範型教養 (貓頭鷹型)",
-        strengths: "重視邏輯與條理，做事細心，能幫助孩子建立良好的生活習慣、責任感與規矩。",
-        warnings: "避免標準過高或顯得吹毛求疵。學習容許孩子犯錯，並在日常中多給予口頭上的讚美與肯定，而非只關注需要改進的地方。"
-      }
+    const fixedLastQuestion = { q: "你會如何形容自己的教養風格？", options: [{t:"我會明確要求孩子的表現，並帶著他朝目標前進。", v:"D"}, {t:"我會用輕鬆互動的方式，陪伴孩子成長。", v:"I"}, {t:"我會耐心陪伴孩子，重視他的感受與情緒。", v:"S"}, {t:"我會訂立清楚規範，並引導孩子把事情做好。", v:"C"}] };
+
+    let finalQuestions = [];
+    let currentIdx = 0;
+    let scores = { D: 0, I: 0, S: 0, C: 0 };
+    let nickname = "";
+    let childAge = "";
+
+    const styleDetails = {
+        D: { animal: "領航型獵鷹 (D型)", icon: "🦅", color: "#E63946", subtitle: "明確果決、目標導向的帶領者", advantage: "幫孩子建立清楚的目標與方向\n在關鍵時刻提供果斷引導與支持\n重視效率，快速掌握重點\n讓孩子更有行動力與自信", situation: "追求效率時可能加快節奏，讓孩子來不及表達情緒。\n習慣「直接給答案」，減少孩子練習獨立思考的機會。", feeling: "覺得你很可靠、有方向感\n在需要幫助時知道可以依靠你\n有時壓力較大，不太敢表達意見", advice: "給建議前先問：「你怎麼想？」\n刻意放慢節奏，讓孩子自己嘗試\n表達不同意見時，先接住再引導", final: "您的果斷是孩子重要的力量。當這份力量多一點「傾聽」，孩子會走得更穩。" },
+        I: { animal: "鼓舞型海豚 (I型)", icon: "🐬", color: "#00A8E8", subtitle: "熱情活潑、樂觀開朗的陪伴者", advantage: "很會營造輕鬆、快樂的家庭氛圍\n擅長鼓勵，提升自信與動機\n容易和孩子建立親近、信任的關係\n讓孩子願意分享、表達自己", situation: "有時候在重視氣氛與感受的同時，可能會比較隨性，讓規則或標準不夠一致。\n也可能在當下互動很好，但事後較難持續落實原本的約定。", feeling: "覺得和你相處很開心、沒有壓力\n很願意和你聊天、分享生活\n但有時也可能會不太確定「界線在哪裡」", advice: "在互動之外，幫孩子建立「少數但清楚」的規則\n使用提醒或輔助小工具(如獎勵貼紙等)幫助落實約定\n在鼓勵的同時，也適度給出具體方向", final: "您帶來的快樂與連結是珍貴養分。當這份溫和多一點「穩定與一致」，會讓孩子更安心。" },
+        S: { animal: "守護型大象 (S型)", icon: "🐘", color: "#2A9D8F", subtitle: "溫和包容、穩定安心的守護者", advantage: "很有耐心，願意長時間陪伴孩子\n能敏銳察覺孩子情緒與需求\n建立安全感，讓孩子敢表達自己\n培養孩子的同理心與人際能力", situation: "因為太在意孩子的感受，有時會不自覺地退讓，或避免衝突。\n也可能在孩子面對困難時，想先幫他擋住，而減少他練習面對挑戰的機會。", feeling: "覺得你很溫暖、可以被理解\n在你身邊會很有安全感\n但有時也可能比較依賴，或不太習慣面對壓力", advice: "練習在關心感受之外，也清楚表達原則\n適時讓孩子承擔小小的挑戰或責任\n當需要堅持時，用溫和但堅定的方式表達", final: "您的陪伴與溫柔是孩子最深的支持。當這份支持多一點「界線與放手」，會幫助孩子走得更遠。" },
+        C: { animal: "精準型貓頭鷹 (C型)", icon: "🦉", color: "#4A6D7C", subtitle: "嚴謹細心、重視原則的引導者", advantage: "能建立清楚的規則與生活結構\n重視細節，幫助孩子養成好習慣\n擅長分析問題並提供具體方法\n培養孩子的思考力與責任感", situation: "有時候在重視正確與標準時，可能會讓孩子感到壓力或緊張。\n也可能因為關注事情本身，而較少回應孩子的情緒。", feeling: "覺得你很有原則、可以依靠\n能從你身上學到做事的方法\n但有時也可能覺得標準較高、不容易放鬆", advice: "在指出問題前，先回應孩子的感受\n練習允許「不完美但可以成長」的過程\n偶爾放鬆標準，讓孩子用自己的方式嘗試", final: "您的細心與原則建立了穩定的基礎。當這份嚴謹多一點「彈性與情感連結」，會讓孩子更自在。" }
     };
 
-    function App() {
-      const [view, setView] = useState('home'); // 'home', 'quiz', 'result'
-      const [nickname, setNickname] = useState('');
-      const [currentQ, setCurrentQ] = useState(0);
-      const [scores, setScores] = useState({ D: 0, I: 0, S: 0, C: 0 });
-      const [quizQuestions, setQuizQuestions] = useState([]);
-      const [resultType, setResultType] = useState(null);
+    const resources = {
+        general: [
+            { name: "DISC 親職教養顧問", tag: "個人化教養對策與線上諮詢", icon: "✨", url: "https://gemini.google.com/gem/1Oo7NFDemVUTBLoAMmjEBqPaifOD-XFdb?usp=sharing" },
+            { name: "教育部全國家庭教育中心", tag: "教養諮詢窗口與官方資源", icon: "🏛️", url: "https://familyedu.moe.gov.tw/docDetail.aspx?uid=8847&pid=8844&docid=294537" },
+            { name: "兒福聯盟：泡福小助手", tag: "爸媽 CALL IN 教養諮詢 AI 服務", icon: "🤖", url: "https://www.children.org.tw/news/news_detail/AI" },
+            { name: "台北市社區心理衛生中心", tag: "心理健康促進與專業資源", icon: "🏥", url: "https://mental-health.gov.taipei/cp.aspx?n=8C6AC26A640E7DE1" }
+        ]
+    };
 
-      // 初始化與打亂選項
-      useEffect(() => {
-        const shuffleArray = (array) => [...array].sort(() => Math.random() - 0.5);
-        const preparedQuestions = RAW_QUESTIONS.map(q => ({
-          ...q,
-          options: shuffleArray(q.options)
-        }));
-        setQuizQuestions(preparedQuestions);
-      }, [view]); // 當重新開始回到首頁時重新洗牌
+    function goHome() { document.getElementById('screen-intro').classList.remove('active'); document.getElementById('screen-home').classList.add('active'); }
 
-      const handleStart = () => {
-        if (!nickname.trim()) {
-          alert("請先填寫暱稱唷！");
-          return;
-        }
-        setScores({ D: 0, I: 0, S: 0, C: 0 });
-        setCurrentQ(0);
-        setView('quiz');
-      };
-
-      const handleOptionClick = (type) => {
-        const newScores = { ...scores, [type]: scores[type] + 1 };
-        setScores(newScores);
-
-        if (currentQ < quizQuestions.length - 1) {
-          // 稍微延遲讓使用者看到點擊效果
-          setTimeout(() => {
-            setCurrentQ(currentQ + 1);
-          }, 150);
-        } else {
-          calculateResult(newScores);
-        }
-      };
-
-      const calculateResult = async (finalScores) => {
-        // 找出最高分
-        let maxType = 'D';
-        let maxScore = finalScores.D;
-        
-        ['I', 'S', 'C'].forEach(type => {
-          if (finalScores[type] > maxScore) {
-            maxScore = finalScores[type];
-            maxType = type;
-          }
-        });
-
-        setResultType(maxType);
-        setView('result');
-        await submitDataToSheet(nickname, RESULT_DATA[maxType].title);
-      };
-
-      const submitDataToSheet = async (name, resultTitle) => {
-        // 套用您的 GAS Web App 網址
-        const GOOGLE_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzTp8_515ZzsZH6osMyV5DuG18x3gmx5Y8Pbt7cLtjTQnaFcKloYEGHXyhpylTSS6LB/exec"; 
-        
-        const timestamp = new Date().toLocaleString('zh-TW');
-        const payload = { nickname: name, result: resultTitle, timestamp };
-        
-        console.log(`[準備送出資料] 暱稱: ${name}, 結果: ${resultTitle}, 時間: ${timestamp}`);
-        
-        try {
-          // 發送請求時加入 mode: 'no-cors'，可繞過瀏覽器的 CORS 阻擋
-          await fetch(GOOGLE_SCRIPT_WEBAPP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 
-              'Content-Type': 'text/plain;charset=utf-8' 
-            },
-            body: JSON.stringify(payload)
-          });
-          
-          console.log("資料發送成功！請檢查您的 Google Sheet。");
-          
-        } catch (error) {
-          console.error("資料傳送失敗", error);
-        }
-      };
-
-      return (
-        <div className="min-h-screen flex justify-center">
-          {/* 手機版面容器，限制最大寬度 */}
-          <div className="w-full max-w-md bg-white shadow-lg overflow-hidden flex flex-col relative">
-            
-            {/* ================= 首頁 ================= */}
-            {view === 'home' && (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 shadow-sm">
-                  <svg className="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                </div>
-                
-                <h1 className="text-2xl font-bold mb-4 text-slate-700">你是哪一種教養風格？</h1>
-                
-                <p className="text-slate-500 text-sm mb-10 leading-relaxed max-w-[280px] mx-auto">
-                  「請以與孩子相處時的情境，依自己實際的行事風格作答，選擇最符合自己的選項，共 15 題」
-                </p>
-
-                <div className="w-full mb-8">
-                  <label htmlFor="nickname" className="block text-left text-sm font-medium text-slate-600 mb-2 pl-1">
-                    請輸入您的暱稱
-                  </label>
-                  <input 
-                    id="nickname"
-                    type="text" 
-                    maxLength="10"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    placeholder="暱稱 (最多10字)" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  />
-                </div>
-
-                <button 
-                  onClick={handleStart}
-                  className="w-full py-4 rounded-xl text-white font-medium text-lg bg-gradient-to-r from-blue-400 to-blue-500 shadow-md active:scale-[0.98] transition-transform"
-                >
-                  開始測驗
-                </button>
-              </div>
-            )}
-
-            {/* ================= 測驗頁 ================= */}
-            {view === 'quiz' && quizQuestions.length > 0 && (
-              <div className="flex-1 flex flex-col p-6 overflow-y-auto">
-                
-                {/* 進度條 */}
-                <div className="mb-6">
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-xs font-medium text-slate-400">目前進度</span>
-                    <span className="text-sm font-bold text-blue-500">{currentQ + 1} / {quizQuestions.length}</span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-400 transition-all duration-300 ease-out"
-                      style={{ width: `${((currentQ + 1) / quizQuestions.length) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* 題目 */}
-                <h2 className="text-[17px] font-medium leading-relaxed text-slate-700 mb-8 min-h-[80px]">
-                  {currentQ + 1}. {quizQuestions[currentQ].text}
-                </h2>
-
-                {/* 選項區塊 */}
-                <div className="flex flex-col gap-3 pb-8">
-                  {quizQuestions[currentQ].options.map((option, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleOptionClick(option.type)}
-                      className="w-full p-5 text-left bg-white border border-slate-200 rounded-2xl shadow-sm text-[15px] leading-relaxed text-slate-600 hover:border-blue-300 active:bg-blue-50 active:border-blue-400 transition-all"
-                    >
-                      {option.text}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ================= 結果頁 ================= */}
-            {view === 'result' && resultType && (
-              <div className="flex-1 flex flex-col p-6 overflow-y-auto bg-slate-50">
-                <div className="text-center mt-6 mb-8">
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-bold mb-3">
-                    測驗結果
-                  </span>
-                  <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                    {nickname}，您的專屬風格是
-                  </h2>
-                  <h1 className="text-3xl font-bold text-blue-500 mt-2">
-                    {RESULT_DATA[resultType].title}
-                  </h1>
-                </div>
-
-                {/* 優點區塊 */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                    <h3 className="font-bold text-lg text-slate-700">教養優點</h3>
-                  </div>
-                  <p className="text-slate-600 leading-relaxed text-[15px]">
-                    {RESULT_DATA[resultType].strengths}
-                  </p>
-                </div>
-
-                {/* 注意事項區塊 */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    </div>
-                    <h3 className="font-bold text-lg text-slate-700">要注意什麼</h3>
-                  </div>
-                  <p className="text-slate-600 leading-relaxed text-[15px]">
-                    {RESULT_DATA[resultType].warnings}
-                  </p>
-                </div>
-
-                <button 
-                  onClick={() => setView('home')}
-                  className="w-full mt-auto mb-6 py-4 rounded-xl text-blue-500 font-medium text-lg bg-blue-50 border border-blue-200 active:bg-blue-100 transition-colors"
-                >
-                  再測一次
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      );
+    function startQuiz() {
+        nickname = document.getElementById('nickname').value.trim();
+        childAge = document.getElementById('child-age').value;
+        if (!nickname || !childAge) { alert("請填寫您的稱呼與孩子年齡層喔！"); return; }
+        let shuffled = [...questionPool].sort(() => Math.random() - 0.5);
+        finalQuestions = shuffled.slice(0, 11);
+        finalQuestions.push(fixedLastQuestion);
+        document.getElementById('screen-home').classList.remove('active');
+        document.getElementById('screen-quiz').classList.add('active');
+        loadQuestion();
     }
 
-    // 將 App 元件渲染到畫面上
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+    function loadQuestion() {
+        const q = finalQuestions[currentIdx];
+        document.getElementById('progress-text').innerText = (currentIdx + 1);
+        const fill = document.getElementById('progress-fill');
+        if (fill) fill.style.width = ((currentIdx + 1) / 12 * 100) + "%";
+        document.getElementById('question-label').innerText = q.q;
+        const box = document.getElementById('options-box');
+        box.innerHTML = "";
+        const shuffledOpts = [...q.options].sort(() => Math.random() - 0.5);
+        shuffledOpts.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = "option-item";
+            div.innerText = opt.t;
+            div.onclick = (e) => { e.preventDefault(); scores[opt.v]++; next(); };
+            box.appendChild(div);
+        });
+    }
+
+    function next() { currentIdx++; if (currentIdx < 12) loadQuestion(); else showResult(); }
+
+    function textToList(text) { return text.split('\n').map(line => `<span>${line}</span>`).join(''); }
+
+    function renderAnalysisContent(type) {
+        const data = styleDetails[type];
+        return `<div class="dimension-item"><div class="dimension-header">☀️ 教養優勢</div><div class="dimension-body">${textToList(data.advantage)}</div></div><div class="dimension-item"><div class="dimension-header">⚠️ 可能會出現的狀況</div><div class="dimension-body">${textToList(data.situation)}</div></div><div class="dimension-item"><div class="dimension-header">💭 孩子可能的感受</div><div class="dimension-body">${textToList(data.feeling)}</div></div><div class="dimension-item"><div class="dimension-header">🌱 給您的教養小調整</div><div class="dimension-body">${textToList(data.advice)}</div></div>`;
+    }
+
+    window.toggleAccordion = function(element) { element.parentElement.classList.toggle('open'); };
+
+    window.downloadResult = function(e) {
+        if(e) e.preventDefault();
+        const area = document.getElementById('capture-area');
+        const btn = document.querySelector('.btn-download');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = "⌛ 生成中...";
+        btn.disabled = true;
+
+        html2canvas(area, { backgroundColor: "#FFFFFF", scale: 3, useCORS: true, allowTaint: true, logging: false }).then(canvas => {
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `DISC教養風格測驗_${nickname}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 200);
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }, 'image/png');
+        }).catch(err => { console.error(err); btn.innerHTML = "❌ 下載失敗"; btn.disabled = false; });
+    };
+
+    // 資料傳送函數
+    async function sendToSheet(topType) {
+        if (!scriptUrl || scriptUrl.includes("您的GAS")) return;
+        const formData = new FormData();
+        formData.append('nickname', nickname);
+        formData.append('ageGroup', childAge);
+        formData.append('resultType', styleDetails[topType].animal);
+        try {
+            await fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors', 
+                body: formData
+            });
+            console.log("Success sent to sheet.");
+        } catch (e) {
+            console.error("Upload error", e);
+        }
+    }
+
+    function showResult() {
+        document.getElementById('screen-quiz').classList.remove('active');
+        document.getElementById('screen-result').classList.add('active');
+        const sorted = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
+        const primary = sorted[0];
+        
+        sendToSheet(primary);
+
+        document.getElementById('res-icon').innerText = styleDetails[primary].icon;
+        document.getElementById('res-title').innerText = styleDetails[primary].animal;
+        document.getElementById('res-subtitle').innerText = styleDetails[primary].subtitle;
+        document.getElementById('result-footer-img').src = footerImageUrl;
+        const grid = document.getElementById('score-grid');
+        grid.innerHTML = "";
+        ['D', 'I', 'S', 'C'].forEach(type => {
+            const pct = Math.round((scores[type] / 12) * 100);
+            grid.innerHTML += `<div class="score-card ${type === primary ? 'active' : ''}"><span class="score-label">${styleDetails[type].animal.split('型')[0]}型</span><span class="score-val">${pct}%</span></div>`;
+        });
+        const primaryData = styleDetails[primary];
+        document.getElementById('main-analysis').innerHTML = `<div class="analysis-block"><div class="type-header"><div class="type-dot" style="background:${primaryData.color}"></div><div class="type-name">${primaryData.animal}</div></div>${renderAnalysisContent(primary)}<div class="highlight-box">💟 給家長的溫馨語錄：<br>${primaryData.final}</div></div>`;
+        const resList = document.getElementById('resource-list');
+        resList.innerHTML = "";
+        resources.general.forEach(res => {
+            resList.innerHTML += `<a href="${res.url}" class="resource-card" target="_blank"><div class="resource-icon">${res.icon || '🔗'}</div><div class="resource-info"><div class="resource-name">${res.name}</div><div class="resource-tag">${res.tag}</div></div></a>`;
+        });
+        const othersBox = document.getElementById('others-analysis');
+        othersBox.innerHTML = "";
+        sorted.slice(1).forEach(type => {
+            const data = styleDetails[type];
+            othersBox.innerHTML += `<div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)"><div class="accordion-label">${data.animal}</div><span class="accordion-arrow">▼</span></button><div class="accordion-content">${renderAnalysisContent(type)}</div></div>`;
+        });
+        window.scrollTo(0, 0);
+    }
+</script>
+
 </body>
 </html>
+
